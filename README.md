@@ -5,9 +5,9 @@ Arduino conectado a un PC que controla un videojuego visto en el monitor.
 
 ## Integrantes del equipo
 
-José Alejandro Ramos Tovar, JoseRTovar.
-Pablo López López, Pablo-02
-Javier Nicolao Gómez, JaviNico
+José Alejandro Ramos Tovar @JoseRTovar.
+Pablo López López @Pablo-02
+Javier Nicolao Gómez @JaviNico
 
 ## Objetivos del trabajo
 
