@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#define  L 1200
+#define N 60
+#define M 20
+
+//Estructura tipo snake que define a la serpiente.
+typedef struct{
+	int x,y;//Indica la posicion de la serpiente.
+	int MovX,MovY;//Indica la dirección de movimiento de la serpiente.
+	char cuerpo;//Indica la forma de la serpiente.
+}snake;
+
+//Estructua tipo fruta que define a la manzana.
+typedef struct{
+	int x,y;//Indica la posición de la manzana.
+}fruta;
+
+snake jugador[L];//La serpiente sera un vector de estructura snake;
+fruta manzana;//La manzana sera una variable de tipo fruta
+
+void Datos_iniciales(int *longitud,char tablero[M][N]);
+void Tablero_vacio(char tablero[M][N]);
+void Imprimir_tablero(char tablero[M][N]);
+void Movimiento_colisiones_crecimiento(char tablero[M][N],int *longitud,int *muerto);
+void Cambio_de_posiciones(char tablero[M][N],int longitud);
+
+int main() {
+	int continuar;
+	do{
+	system("color F5");
+	int longitud;//Variable tipo entero que define la longitud de la serpiente
+	char tablero[M][N];//Matriz tipo char que hace referencia a todo el tablero del juego.
+	int muerto=0;//Variable tipo entero que nos dice si la serpiente está viva(0) o muerta(1).
+	Datos_iniciales(&longitud,tablero);
+	do{//bucle del juego, se repiten todas las funciones mientras la serpiente siga viva para que pueda haber movimiento.
+		Imprimir_tablero(tablero);//Imprimimos el tablero con los datos almacenados.
+		Movimiento_colisiones_crecimiento(tablero,&longitud,&muerto);//detecta si cambia el movimiento o colisiona con algo.
+		Tablero_vacio(tablero);//Limpia el tablero 
+		Cambio_de_posiciones(tablero,longitud);//asigna los nuevos datos al tablero (posicion de la serpiente y manzana)
+		system("cls");//Se limpia la consola imitando un paso de frames (provoca el pestañeo de los char)
+	}while(muerto==0);	
+	system("color 0c");
+	printf("GAME OVER\n\nPUNTUACION: %d\n\n",longitud-2);
+	printf("Pulse 1 para seguir jugando o 0 para terminar: ");
+	scanf("%d",&continuar);
+	}while(continuar!=0);
+	return 0;
+}
+//Funcion para definir los datos iniciales.
+void Datos_iniciales(int *longitud, char tablero[M][N]){
+	int i;
+	*longitud=2;//longitud inicial de la serpiente será 2.
+	jugador[0].x=32;//Coordenadas iniciales de la serpiente.
+	jugador[0].y=10;
+	jugador[0].cuerpo='C';//La posicion 0 de la serpiente será la cabeza indicacada con la C
+	jugador[1].x=jugador[0].x-1;//A la izquierda de la cabeza, en la posición 1 habra un trozo de cuerpo indicada con la S
+	jugador[1].y=jugador[0].y;
+	jugador[1].cuerpo='S';
+	
+	srand(time(NULL));//generamos la posición aleatoria de la manzana en un lugar dentro de los bordes del tablero.
+	manzana.x=rand()%(N-2)+1;
+	manzana.y=rand()%(M-2)+1;
+	
+	for(i=0;i<*longitud;i++){//asignamos al tablero las partes del cuerpo de la serpiente en sus coordenadas correspondientes
+		tablero[jugador[i].y][jugador[i].x]=jugador[i].cuerpo;
+	}
+	tablero[manzana.y][manzana.x]='M';//asignamos la manzana indicada con M a sus correspondientes coordenadas
+	for(i=0;i<*longitud;i++){//El movimiento de la serpiente comienza hacia la derecha
+		jugador[i].MovX=1;
+		jugador[i].MovY=0;
+	}
+	Tablero_vacio(tablero);
+}
+
+//Funcion que delimita el tablero con * e imprime espacios en blanco donde no haya nada (serpiente, manzana o borde)
+void Tablero_vacio(char tablero[M][N]){
+	int i,j;
+	for(i=0;i<M;i++){
+		for(j=0;j<N;j++){
+			if(i==0 || i==M-1 || j==0 || j==N-1){
+				tablero[i][j]='*';
+			}
+			else{
+				tablero[i][j]=' ';
+			}
+		}
+	}
+}
+
+//Función que imprime todo lo que se haye en la matriz tablero (manzana, serpiente, bordes y espacios en blanco).
+void Imprimir_tablero(char tablero[M][N]){
+	int i,j;
+	for(i=0;i<M;i++){
+		for(j=0;j<N;j++){
+			printf("%c",tablero[i][j]);
+		}
+		printf("\n");
+	}
+}
+//Función encargada de asignar teclas al movimiento y de definir como muere la serpiente.
+void Movimiento_colisiones_crecimiento(char tablero[M][N],int *longitud,int *muerto){
+	int i;
+	char tecla;
+	//Si la cabeza de la serpiente toca un borde se muere (variable muerto=1).
+	if(jugador[0].x==0 || jugador[0].y==0 || jugador[0].x==N-1 || jugador[0].y==M-1){
+		*muerto=1;
+	}
+	//Si la cabeza de la serpiente toca su cuerpo muere.
+	for(i=1;i<*longitud && *muerto==0;i++){
+		if(jugador[0].x==jugador[i].x && jugador[0].y==jugador[i].y){
+			*muerto=1;
+		}
+	}
+	//Si la serpiente toca a la manzana la longitud aumenta 1 y se genera otra posición aleatoria para la manzana.
+	if(jugador[0].x==manzana.x && jugador[0].y==manzana.y){
+		*longitud+=1;
+		jugador[*longitud-1].cuerpo='S';
+		manzana.x=rand()%(N-2)+1;
+		manzana.y=rand()%(M-2)+1;
+	} 
+	if(*muerto==0){//Mientras la serpiente está viva.
+		if(kbhit()==1){//Se detecta si hay una tecla pulsandose y se almacena en la variable char tecla.
+			tecla=getch();
+			if(tecla=='s' && jugador[0].MovY!=-1){//con la s la serpiente se mueve hacia abajo siempre y cuando no se esté moviendo hacia arriba.
+				jugador[0].MovX=0;
+				jugador[0].MovY=1;
+			}
+			if(tecla=='w' && jugador[0].MovY!=1){//con la w la serpiente se mueve hacia arriba si no se esta moviendo hacia abajo.
+				jugador[0].MovX=0;
+				jugador[0].MovY=-1;
+			}
+			if(tecla=='a' && jugador[0].MovX!=1){//''''
+				jugador[0].MovX=-1;
+				jugador[0].MovY=0;
+			}
+			if(tecla=='d' && jugador[0].MovX!=-1){//''''
+				jugador[0].MovX=1;
+				jugador[0].MovY=0;
+			}
+		}
+	}
+}
+//Funcion que se encarga de cambiar la posición de cada parte de la serpiente y de la manzana.
+void Cambio_de_posiciones(char tablero[M][N],int longitud){
+	int i;
+	for(i=longitud-1;i>0;i--){//La ultima parte del cuerpo de la serpiente se mueve a la coordenada de la anterior y así una por una
+		jugador[i].x=jugador[i-1].x;
+		jugador[i].y=jugador[i-1].y;
+	}
+	//La coordenada de la cabeza de la serpiente se mueve 1 en el eje x o 1 en el eje y según indique el movimiento seleccionado
+	jugador[0].x+=jugador[0].MovX;
+	jugador[0].y+=jugador[0].MovY;
+	//Asignamos al tablero todas las posiciones que corresponden a cada parte del cuerpo de la serpiente.
+	for(i=0;i<longitud;i++){
+		tablero[jugador[i].y][jugador[i].x]=jugador[i].cuerpo;
+	}
+	//Asingamos al tablero la posición nueva de la manzana.
+	tablero[manzana.y][manzana.x]='M';
+}
